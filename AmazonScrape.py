@@ -1,72 +1,59 @@
+"""
+PeerRoth, 12/2018, Help: scrapehero.com, pythonprogramming.net
+Dependencies:
+    lxml
+    requests
+    MySQLdb
+"""
+import csv, os, json
+from itertools import cycle
 from lxml import html  
-import csv,os,json
+import MySQLdb
 import requests
 from time import sleep
 import time
-import MySQLdb
-from itertools import cycle
 from types import *
 
+   
 def insertSQL(details):
-    print('details',details,type(details))
-    conn = MySQLdb.connect("localhost", "root", "r00t0fallev1l", "amazon")
+    #arguments: (#Your Server, #Your Server Login, #Your Server Password, #Your Database Name)
+    conn = MySQLdb.connect("localhost", "root", "password", "amazon")
     c = conn.cursor()
     d = details.get("CATEGORY", "none")
-    print('d',d, type(d))
     e = details.get("ORIGINAL_PRICE", "none")
     if type(e) is StringType:
         e = e
     else:
         e = 'N/A'
-    print('e',e, type(e))
     f = details.get("NAME", "none")
-    print('f',f, type(f))
-    
     g = details.get("URL", "none")
-    print('g',g, type(g))
-
     h = details.get("SALE_PRICE", "none")
     if type(h) is StringType:
         h = h
     else:
         h = 'N/A'
-    print('h',h, type(h))
     i = details.get("AVAILABILITY", "none")
+    #Strip series of \n's and long whitespaces
     i = i.replace('\n','').replace('          ','')
-    print('i',i, type(i))
-
-#     print('dets',details)
     c.execute("INSERT INTO scrape (CATEGORY,ORIGINALPRICE,NAME,URL,SALEPRICE,AVAILABILITY) VALUES (%s,%s,%s,%s,%s,%s)",
             (d,e,f,g,h,i))
     conn.commit()
-#     c.execute("INSERT INTO taula (time, username, tweet) VALUES (%s,%s,%s)",
-#             (time.time(), username, tweet))
     rows = c.fetchall()
-    for eachRow in rows:
-        print('eachRow',eachRow)
  
 def AmzonParser(url):
+    #Proxies are from free proxy site.  There are a number of them accessible with a quick Google search.
     proxies = ['54.236.44.224:3128','205.177.86.213:8888','35.240.29.142:3128','173.192.21.89:8123']
     headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
     proxy_pool = cycle(proxies)
     for i in range(1,6):
         #Get a proxy from the pool
         proxy = next(proxy_pool)
-#         payload = {"prox"https": proxy], "headers": ["User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"]}
-        print("Request #%d"%i, 'from our ',proxy)
-        
         try:
-            print('try000')
             page = requests.get(url, proxies={"https":proxy}, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"})
-            print('try1',page.url)
             while True:
-                print('while true')
                 sleep(3)
                 try:
                     doc = html.fromstring(page.content)
-                    with open('amzdoc.txt', 'w+') as t:
-                        for dd in doc:
-                            t.write(str(dd))
                     XPATH_NAME = '//h1[@id="title"]//text()'
                     XPATH_SALE_PRICE = '//span[contains(@id,"ourprice") or contains(@id,"saleprice")]/text()'
                     XPATH_ORIGINAL_PRICE = '//td[contains(text(),"List Price") or contains(text(),"M.R.P") or contains(text(),"Price")]/following-sibling::td/text()'
@@ -99,15 +86,14 @@ def AmzonParser(url):
                     'URL':url,
                     }
                     insertSQL(data)
+                    #Return data for other uses besides SQL insert
                     return data
                 except Exception as e:
-                    print('e', e)
+                    print('Exception: ', e)
         except Exception as e:
             #Most free proxies will often get connection errors. You will have retry the entire request using another proxy to work. 
             #We will just skip retries as its beyond the scope of this tutorial and we are only downloading a single url 
-            print(e,"Skipping. Connnection error")
-#             page = requests.get(url,headers=headers)
-    
+            print(e,"Skipping. Connnection error")    
              
 def ReadAsin():
     # AsinList = csv.DictReader(open(os.path.join(os.path.dirname(__file__),"Asinfeed.csv")))
@@ -119,21 +105,15 @@ def ReadAsin():
     'B00EPGK7CQ',
     'B00EPGKA4G',
     'B00YW5DLB4',
-    'B00KGD0628'
-    ]
+    'B00KGD0628']
     extracted_data = []
     
     for i in AsinList:
         print('i')
         url = "http://www.amazon.com/dp/"+i
-        print( "Processing: "+url)
         extracted_data.append(AmzonParser(url))
         sleep(5)
-#     f=open('data.json','w')
-#     json.dump(extracted_data,f,indent=4)
  
-
-
  
 if __name__ == "__main__":
     ReadAsin()
