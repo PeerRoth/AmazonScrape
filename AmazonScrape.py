@@ -1,7 +1,14 @@
-""" Tool to scrape Amazon for product details and insert them
+""" 
+Tool to scrape Amazon for product details and insert them
 into a database via MySQL.
 -Enjoy!!!
-PR
+
+PeerRoth, 12/2018, Help: scrapehero.com, pythonprogramming.net
+
+Dependencies:
+    lxml
+    requests
+    MySQLdb
 
 Futures:
     Database and table creation
