@@ -1,5 +1,8 @@
 # AmazonScrape
 
+https://peterrodinis.com/python or
+https://peterrodinis.com/devportfolio
+
 Written in Python
 
 Tool to perform web-scraping on Amazon products with proxy and commit findings to mysql database.
